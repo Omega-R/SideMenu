@@ -35,15 +35,7 @@ internal final class SideMenuPresentationController {
     private weak var presentedViewController: UIViewController?
     private weak var presentingViewController: UIViewController?
 
-    private lazy var snapshotView: UIView? = {
-        guard config.presentingViewControllerUseSnapshot,
-            let view = presentingViewController?.view.snapshotView(afterScreenUpdates: true) else {
-                return nil
-        }
-
-        view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-        return view
-    }()
+    private var snapshotView: UIView?
 
     private lazy var statusBarView: UIView? = {
         guard config.statusBarEndAlpha > .leastNonzeroMagnitude else { return nil }
@@ -61,6 +53,7 @@ internal final class SideMenuPresentationController {
         self.leftSide = leftSide
         self.presentedViewController = presentedViewController
         self.presentingViewController = presentingViewController
+        snapshotView = makeSnapshot()
     }
 
     deinit {
@@ -83,7 +76,7 @@ internal final class SideMenuPresentationController {
         }
         presentingViewController.view.untransform {
             presentingViewController.view.frame = frameOfPresentingViewInContainerView
-            snapshotView?.frame = presentingViewController.view.bounds
+            snapshotView?.frame = UIScreen.main.bounds
         }
 
         guard let statusBarView = statusBarView else { return }
@@ -156,7 +149,6 @@ internal final class SideMenuPresentationController {
     }
 
     func dismissalTransitionWillBegin() {
-        snapshotView?.removeFromSuperview()
         presentationTransition()
 
         guard let presentedViewController = presentedViewController,
@@ -205,7 +197,17 @@ internal final class SideMenuPresentationController {
         }
 
         presentingViewController.view.isUserInteractionEnabled = true
+        snapshotView?.removeFromSuperview()
         config.presentationStyle.dismissalTransitionDidEnd(to: presentedViewController, from: presentingViewController, completed)
+    }
+    
+    private func makeSnapshot() -> UIView? {
+        guard config.presentingViewControllerUseSnapshot else {
+            return nil
+        }
+        let snapshot = UIScreen.main.snapshotView(afterScreenUpdates: false)
+        snapshot.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+        return snapshot
     }
 }
 
