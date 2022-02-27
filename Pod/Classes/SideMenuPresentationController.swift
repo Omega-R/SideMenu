@@ -230,6 +230,9 @@ private extension SideMenuPresentationController {
     }
 
     var frameOfPresentingViewInContainerView: CGRect {
+        if config.presentingViewControllerUseSnapshot {
+            return presentingViewController?.view.frame ?? .zero
+        }
         guard let containerView = containerView else { return .zero }
         var rect = containerView.frame
         if containerView.superview != nil, containerView.frame.minY > .ulpOfOne {
